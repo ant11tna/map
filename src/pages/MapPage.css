@@ -1,0 +1,199 @@
+.album-map-page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #eef2f7;
+}
+
+.maplibre-container {
+  width: 100%;
+  height: 100%;
+}
+
+.top-floating-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.top-floating-bar > * {
+  pointer-events: auto;
+}
+
+.floating-btn {
+  min-width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.16);
+}
+
+.segment-control {
+  display: flex;
+  background: rgba(255, 255, 255, 0.76);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.segment-control button {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  padding: 7px 14px;
+}
+
+.segment-control .active {
+  background: #fff;
+}
+
+.right-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.search-panel-map {
+  position: absolute;
+  top: 72px;
+  left: 16px;
+  width: min(360px, calc(100vw - 32px));
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  padding: 10px;
+  z-index: 25;
+}
+
+.search-panel-map input,
+.search-panel-map button {
+  width: 100%;
+}
+
+.search-panel-map ul {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.search-panel-map li button {
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  padding: 8px;
+  text-align: left;
+  background: #fff;
+}
+
+.search-panel-map span {
+  display: block;
+  color: #667085;
+  font-size: 12px;
+}
+
+.pending-save {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pending-save button {
+  max-width: 120px;
+}
+
+.album-marker {
+  position: relative;
+  width: 74px;
+  height: 86px;
+}
+
+.album-marker .thumb {
+  width: 74px;
+  height: 58px;
+  border-radius: 14px;
+  border: 3px solid #fff;
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.24);
+  background-size: cover;
+  background-position: center;
+}
+
+.album-marker .badge {
+  position: absolute;
+  left: 6px;
+  bottom: 30px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.76);
+  color: #fff;
+  padding: 2px 7px;
+  font-size: 11px;
+}
+
+.album-marker .pin-tail {
+  width: 0;
+  height: 0;
+  margin: 4px auto 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 12px solid #fff;
+  filter: drop-shadow(0 6px 5px rgba(15, 23, 42, 0.2));
+}
+
+.glass-drawer {
+  position: absolute;
+  top: 120px;
+  right: 16px;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 130px);
+  overflow: auto;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.2);
+  padding: 14px;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.glass-drawer input,
+.glass-drawer textarea,
+.glass-drawer button {
+  width: 100%;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #d0d5dd;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.photo-grid img {
+  width: 100%;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.small-text {
+  color: #475467;
+  font-size: 12px;
+}
