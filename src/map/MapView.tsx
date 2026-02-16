@@ -2,7 +2,7 @@ import maplibregl from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 import { saveMapView } from '../db/database';
 import type { Place } from '../types/place';
-import { type MapLanguage, setMapLanguage } from './styles';
+import { getDefaultStyleUrl, type MapLanguage, setMapLanguage } from './styles';
 import { type MarkerRecord, syncPlaceMarkers } from './markers';
 
 type MapViewProps = {
@@ -21,6 +21,7 @@ function MapView({ center, zoom, styleUrl, language, places, coverByPlaceId, fly
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<MarkerRecord[]>([]);
+  const styleUrlRef = useRef(styleUrl);
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -63,11 +64,34 @@ function MapView({ center, zoom, styleUrl, language, places, coverByPlaceId, fly
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) {
+    if (!map) {
+      return;
+    }
+
+    const nextUrl = getDefaultStyleUrl(language);
+    const prevUrl = styleUrlRef.current;
+
+    if (nextUrl !== prevUrl) {
+      styleUrlRef.current = nextUrl;
+      map.setStyle(nextUrl);
+      map.once('style.load', () => {
+        setMapLanguage(map, language);
+        markersRef.current = syncPlaceMarkers({
+          map,
+          places,
+          coverByPlaceId,
+          existing: markersRef.current,
+          onClick: onMarkerClick
+        });
+      });
+      return;
+    }
+
+    if (!map.isStyleLoaded()) {
       return;
     }
     setMapLanguage(map, language);
-  }, [language]);
+  }, [language, places, coverByPlaceId, onMarkerClick]);
 
   useEffect(() => {
     const map = mapRef.current;

@@ -2,13 +2,13 @@ import type maplibregl from 'maplibre-gl';
 
 export type MapLanguage = 'zh' | 'en';
 
-export function getDefaultStyleUrl() {
+export function getDefaultStyleUrl(lang: MapLanguage = 'zh') {
   const env = import.meta.env;
   if (env.VITE_MAP_STYLE_URL) {
     return env.VITE_MAP_STYLE_URL;
   }
   if (env.VITE_MAP_API_KEY) {
-    return `https://api.maptiler.com/maps/streets-v2/style.json?key=${env.VITE_MAP_API_KEY}`;
+    return `https://api.maptiler.com/maps/streets-v2/style.json?key=${env.VITE_MAP_API_KEY}&language=${lang}`;
   }
   // Soft muted vector style (closer to Apple-like light map) without API key
   return 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';

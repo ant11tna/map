@@ -9,6 +9,7 @@ export type Place = {
   visitedAt?: string;
   photoCount: number;
   photoCover?: string;
+  coverPhotoId?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -16,8 +17,8 @@ export type Place = {
 export type PlacePhoto = {
   id: string;
   placeId: string;
-  blob: Blob;
   mimeType: string;
+  fileExt: string;
   createdAt: string;
 };
 
