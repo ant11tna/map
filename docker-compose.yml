@@ -1,0 +1,22 @@
+services:
+  api:
+    build:
+      context: ./api
+    container_name: travel-map-api
+    environment:
+      - CORS_ORIGINS=http://localhost:8080
+    volumes:
+      - ./data:/data
+    ports:
+      - "8787:8787"
+
+  web:
+    build:
+      context: ./web
+    container_name: travel-map-web
+    depends_on:
+      - api
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"

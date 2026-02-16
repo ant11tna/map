@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import PlaceDetailDrawer from '../components/PlaceDetailDrawer';
-import { db, getMapView } from '../db/database';
+import { getMapView } from '../db/database';
 import MapView from '../map/MapView';
 import { defaultCoverDataUrl } from '../map/markers';
 import { getDefaultStyleUrl, type MapLanguage } from '../map/styles';
 import { useDebounce } from '../hooks/useDebounce';
 import { geocodePlaces } from '../services/geocode';
-import { seedMockDataIfNeeded } from '../services/mockData';
+import { createPlace, getPhotoUrl, listPlaces } from '../services/api';
 import type { Place, SearchCandidate } from '../types/place';
 import './MapPage.css';
 
@@ -32,36 +32,22 @@ function MapPage() {
   const debouncedQuery = useDebounce(query, 400);
 
   const loadPlaces = useCallback(async () => {
-    const data = await db.places.orderBy('updatedAt').reverse().toArray();
+    const data = await listPlaces();
     setPlaces(data);
 
     const covers: Record<string, string> = {};
-    await Promise.all(
-      data.map(async (place) => {
-        if (place.photoCover) {
-          covers[place.id] = place.photoCover;
-          return;
-        }
-        const first = await db.photos.where('placeId').equals(place.id).first();
-        covers[place.id] = first ? URL.createObjectURL(first.blob) : defaultCoverDataUrl;
-      })
-    );
-
-    setCoverByPlaceId((prev) => {
-      Object.values(prev).forEach((value) => {
-        if (value.startsWith('blob:')) {
-          URL.revokeObjectURL(value);
-        }
-      });
-      return covers;
+    data.forEach((place) => {
+      if (place.coverPhotoId) {
+        covers[place.id] = getPhotoUrl(place.coverPhotoId);
+        return;
+      }
+      covers[place.id] = defaultCoverDataUrl;
     });
+
+    setCoverByPlaceId(covers);
   }, []);
 
   useEffect(() => {
-    if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MOCK === 'true') {
-      seedMockDataIfNeeded().catch(() => undefined);
-    }
-
     getMapView().then((view) => {
       if (view) {
         setCenter(view.center);
@@ -87,17 +73,6 @@ function MapPage() {
       .catch((error) => setSearchError(error instanceof Error ? error.message : '搜索失败'));
   }, [debouncedQuery]);
 
-  useEffect(
-    () => () => {
-      Object.values(coverByPlaceId).forEach((value) => {
-        if (value.startsWith('blob:')) {
-          URL.revokeObjectURL(value);
-        }
-      });
-    },
-    [coverByPlaceId]
-  );
-
   const displayedPlaces = useMemo(() => {
     if (segment === 'featured') {
       return places.filter((item) => item.photoCount >= 20);
@@ -111,18 +86,14 @@ function MapPage() {
     if (!pending) {
       return;
     }
-    const now = new Date().toISOString();
-    await db.places.put({
-      id: crypto.randomUUID(),
+    await createPlace({
       name: pending.name,
       address: pending.address,
       lat: pending.lat,
       lng: pending.lng,
       title: pending.name,
       note: '',
-      photoCount: 0,
-      createdAt: now,
-      updatedAt: now
+      visitedAt: undefined
     });
     setPending(null);
     await loadPlaces();
@@ -133,7 +104,7 @@ function MapPage() {
       <MapView
         center={center}
         zoom={zoom}
-        styleUrl={getDefaultStyleUrl()}
+        styleUrl={getDefaultStyleUrl(language)}
         language={language}
         places={displayedPlaces}
         coverByPlaceId={coverByPlaceId}

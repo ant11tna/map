@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { db } from '../db/database';
+import { deletePhoto, getPhotoUrl, listPlacePhotos, updatePlace, uploadPlacePhotos } from '../services/api';
 import type { Place, PlacePhoto } from '../types/place';
 
 type PlaceDetailDrawerProps = {
@@ -23,7 +23,7 @@ function PlaceDetailDrawer({ place, onClose, onUpdated }: PlaceDetailDrawerProps
       note: place.note,
       visitedAt: place.visitedAt ?? ''
     });
-    db.photos.where('placeId').equals(place.id).toArray().then(setPhotos).catch(() => setMessage('加载图片失败。'));
+    listPlacePhotos(place.id).then(setPhotos).catch(() => setMessage('加载图片失败。'));
   }, [place]);
 
   useEffect(() => {
@@ -33,11 +33,10 @@ function PlaceDetailDrawer({ place, onClose, onUpdated }: PlaceDetailDrawerProps
 
     const timer = setTimeout(async () => {
       try {
-        await db.places.update(place.id, {
+        await updatePlace(place.id, {
           title: form.title.trim() || place.name,
           note: form.note,
-          visitedAt: form.visitedAt || undefined,
-          updatedAt: new Date().toISOString()
+          visitedAt: form.visitedAt || undefined
         });
         onUpdated();
       } catch {
@@ -48,17 +47,7 @@ function PlaceDetailDrawer({ place, onClose, onUpdated }: PlaceDetailDrawerProps
     return () => clearTimeout(timer);
   }, [form, place, onUpdated]);
 
-  const photoUrls = useMemo(
-    () => photos.map((photo) => ({ id: photo.id, url: URL.createObjectURL(photo.blob) })),
-    [photos]
-  );
-
-  useEffect(
-    () => () => {
-      photoUrls.forEach((item) => URL.revokeObjectURL(item.url));
-    },
-    [photoUrls]
-  );
+  const photoUrls = useMemo(() => photos.map((photo) => ({ id: photo.id, url: getPhotoUrl(photo.id) })), [photos]);
 
   if (!place) {
     return null;
@@ -69,19 +58,8 @@ function PlaceDetailDrawer({ place, onClose, onUpdated }: PlaceDetailDrawerProps
       return;
     }
     try {
-      const now = new Date().toISOString();
-      const payload: PlacePhoto[] = Array.from(files).map((file) => ({
-        id: `${place.id}-${crypto.randomUUID()}`,
-        placeId: place.id,
-        blob: file,
-        mimeType: file.type,
-        createdAt: now
-      }));
-
-      await db.photos.bulkPut(payload);
-      const newPhotos = await db.photos.where('placeId').equals(place.id).toArray();
+      const newPhotos = await uploadPlacePhotos(place.id, files);
       setPhotos(newPhotos);
-      await db.places.update(place.id, { photoCount: Math.max(place.photoCount, newPhotos.length), updatedAt: now });
       onUpdated();
       setMessage('图片已上传');
     } catch {
@@ -89,15 +67,14 @@ function PlaceDetailDrawer({ place, onClose, onUpdated }: PlaceDetailDrawerProps
     }
   }
 
-  async function deletePhoto(id: string) {
+  async function removePhoto(id: string) {
     if (!place) {
       return;
     }
     try {
-      await db.photos.delete(id);
-      const newPhotos = await db.photos.where('placeId').equals(place.id).toArray();
+      await deletePhoto(id);
+      const newPhotos = await listPlacePhotos(place.id);
       setPhotos(newPhotos);
-      await db.places.update(place.id, { photoCount: newPhotos.length, updatedAt: new Date().toISOString() });
       onUpdated();
     } catch {
       setMessage('删除图片失败。');
@@ -135,7 +112,7 @@ function PlaceDetailDrawer({ place, onClose, onUpdated }: PlaceDetailDrawerProps
         {photoUrls.map((item) => (
           <figure key={item.id}>
             <img src={item.url} alt="地点照片" />
-            <button onClick={() => deletePhoto(item.id)}>删除</button>
+            <button onClick={() => removePhoto(item.id)}>删除</button>
           </figure>
         ))}
       </div>
